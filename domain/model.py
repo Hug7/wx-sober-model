@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import List, Union, Dict, Any, Optional
+from typing import List, Union, Dict, Any, Optional, Set
 
 from domain.constant import VarType, RelationType
 from util.exception import DataTypeUnsupportedError, DirectoryPathNotFoundError, DirectoryPathIsNotEmptyError
@@ -23,32 +23,46 @@ class Constant:
 @dataclass()
 class Dimension:
     name: str
+    desc: str = field(default='')
+
+
+@dataclass()
+class Space:
+    name: str
+    dims: List[Dimension]
+    dim_len: int = field(default_factory=int)
+    desc: str = field(default='')
+
+    def __post_init__(self):
+        self.dim_len = len(self.dims)
 
 
 @dataclass()
 class Gather:
     name: str
+    dim: Dimension
+    desc: str = field(default='')
 
 
 @dataclass()
 class Index:
     name: str
     dim: Dimension
-    gather: Gather
+    desc: str = field(default='')
 
 
 @dataclass()
 class Variable:
     name: str
     type: VarType
+    space: Space
     label: str = field(default='')
-    is_free: bool = field(default=True)
     ub: float = field(default=None)
     lb: float = field(default=None)
     desc: str = field(default='')
 
     def var_bound_to_tex(self):
-        if self.is_free:
+        if self.lb is None and self.ub is None:
             return f'{self.name} is free'
         res_str = self.name
         if self.lb is not None:
